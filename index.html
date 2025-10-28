@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon"> 
+  <title>PROGRAMA REATIVA - Mega Mais Proteção Patrimonial</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: "Poppins", sans-serif;
+    }
+
+    body {
+      background: linear-gradient(to top, #0c3483 0%, #173D5D 100%, #6b8cce 100%, #173D5D 100%);
+      color: #fff;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    /* Logo responsiva */
+    .logo {
+  width: 30%;
+  max-width: 55%;
+  margin-bottom: 5px; 
+  margin-top: -10px; 
+  animation: fadeIn 1s ease;
+}
+
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    h1 {
+  text-align: center;
+  font-size: 2rem;
+  margin-bottom: 5px; 
+  line-height: 1.3;
+}
+
+
+    p.subtitle {
+      text-align: center;
+      margin-bottom: 30px;
+      font-size: 1.1rem;
+    }
+
+    .calculator {
+      background: #ffffff;
+      color: #333;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 500px;
+      width: 100%;
+      box-shadow: 0 5px 25px rgba(0, 0, 0, 0.3);
+    }
+
+    .calculator h2 {
+      text-align: center;
+      color: #173D5D;
+      margin-bottom: 20px;
+    }
+
+    .input-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      font-weight: bold;
+      display: block;
+      margin-bottom: 5px;
+    }
+
+    input {
+      width: 100%;
+      padding: 10px;
+      border: 2px solid #173D5D;
+      border-radius: 10px;
+      font-size: 1rem;
+      outline: none;
+    }
+
+    button {
+      background: #FF8341;
+      color: #fff;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      width: 100%;
+      transition: 0.3s;
+      font-weight: bold;
+    }
+
+    button:hover {
+      background: #8F4923;
+    }
+
+    .result {
+      margin-top: 25px;
+      background: linear-gradient(to top, #173D5D 0%, #6f86d6 100%);
+      color: #fff;
+      padding: 20px;
+      border-radius: 15px;
+      text-align: center;
+      box-shadow: 0 3px 10px rgba(0, 0, 0, 0.2);
+    }
+
+    .result h3 {
+      margin-bottom: 10px;
+    }
+
+    .result ul {
+      list-style: none;
+      text-align: left;
+      margin-top: 10px;
+      font-size: 1.1rem;
+    }
+
+    .highlight {
+      color: #ffeb3b;
+      font-weight: bold;
+    }
+
+    footer {
+      margin-top: 30px;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.9;
+    }
+
+    /* Responsividade */
+    @media (max-width: 480px) {
+      h1 {
+        font-size: 1.6rem;
+      }
+      .calculator {
+        padding: 20px;
+      }
+      .logo {
+        width: 140px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Logo da Mega Mais -->
+  <img src="logo.png" alt="Logo Mega Mais Proteção Patrimonial" class="logo" />
+
+  <h1>PROGRAMA REATIVA <br><br> 💥 Oportunidade Imperdível!</h1>
+  <p class="subtitle">
+    A <strong>Mega Mais Proteção Patrimonial</strong> está oferecendo descontos progressivos para você continuar protegido com o menor impacto no seu bolso.
+  </p>
+
+  <div class="calculator">
+    <h2>Calculadora de Reajuste Progressivo</h2>
+    <div class="input-group">
+      <label for="valorAntigo">💰 Valor anterior da mensalidade (R$):</label>
+      <input type="number" id="valorAntigo" placeholder="Ex: 360" step="0.01" />
+    </div>
+
+    <div class="input-group">
+      <label for="valorNovo">🚗 Valor reajustado (R$):</label>
+      <input type="number" id="valorNovo" placeholder="Ex: 414" step="0.01" />
+    </div>
+
+    <button onclick="calcular()">Calcular Desconto Progressivo</button>
+
+    <div id="resultado" class="result" style="display: none;"></div>
+  </div>
+
+  <footer>
+    © 2025 Mega Mais Proteção Patrimonial - Todos os direitos reservados.
+  </footer>
+
+  <script>
+    function calcular() {
+      const valorAntigo = parseFloat(document.getElementById("valorAntigo").value);
+      const valorNovo = parseFloat(document.getElementById("valorNovo").value);
+      const resultado = document.getElementById("resultado");
+
+      if (isNaN(valorAntigo) || isNaN(valorNovo) || valorAntigo <= 0 || valorNovo <= 0) {
+        resultado.style.display = "block";
+        resultado.innerHTML = "<h3>⚠️ Por favor, preencha os dois campos corretamente.</h3>";
+        return;
+      }
+
+      const primeiroMes = valorAntigo * 0.9; // 10% de desconto
+      const diferenca = valorNovo - primeiroMes;
+      const incremento = diferenca / 4;
+
+      let valores = [];
+      for (let i = 0; i < 5; i++) {
+        valores.push((primeiroMes + incremento * i).toFixed(2));
+      }
+
+      resultado.style.display = "block";
+      resultado.innerHTML = `
+        <h3>🎉 Confira seu plano com desconto progressivo:</h3>
+        <ul>
+          <li>1º mês: <span class="highlight">R$ ${valores[0]}</span></li>
+          <li>2º mês: <span class="highlight">R$ ${valores[1]}</span></li>
+          <li>3º mês: <span class="highlight">R$ ${valores[2]}</span></li>
+          <li>4º mês: <span class="highlight">R$ ${valores[3]}</span></li>
+          <li>5º mês: <span class="highlight">R$ ${valores[4]}</span> (valor final reajustado)</li>
+        </ul>
+        <p>💡 Aproveite essa oportunidade exclusiva e continue com a segurança, agilidade e credibilidade da <strong>Mega Mais Proteção Patrimonial</strong>.</p>
+        <p>Agora com <strong>indenização em até 30 dias</strong> e <strong>apólice de seguro auto regulamentada pela SUSEP!</strong></p>
+      `;
+    }
+  </script>
+</body>
+</html>
