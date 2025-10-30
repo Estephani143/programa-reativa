@@ -5,6 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <link rel="icon" href="favicon.ico" type="image/x-icon"> 
   <title>PROGRAMA REATIVA - Mega Mais Proteção Patrimonial</title>
+
+  <!-- Chart.js -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <!-- html2canvas e jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
   <style>
     * {
       margin: 0;
@@ -14,7 +21,7 @@
     }
 
     body {
-      background: linear-gradient(to top, #0c3483 0%, #173D5D 100%, #6b8cce 100%, #173D5D 100%);
+      background: linear-gradient(to top, #0c3483 0%, #173D5D 100%);
       color: #fff;
       min-height: 100vh;
       display: flex;
@@ -24,15 +31,13 @@
       padding: 20px;
     }
 
-    /* Logo responsiva */
     .logo {
-  width: 30%;
-  max-width: 55%;
-  margin-bottom: 5px; 
-  margin-top: -10px; 
-  animation: fadeIn 1s ease;
-}
-
+      width: 20%;
+      max-width: 45%;
+      margin-bottom: 5px;
+      margin-top: -10px;
+      animation: fadeIn 1s ease;
+    }
 
     @keyframes fadeIn {
       from { opacity: 0; transform: translateY(-10px); }
@@ -40,12 +45,12 @@
     }
 
     h1 {
-  text-align: center;
-  font-size: 2rem;
-  margin-bottom: 5px; 
-  line-height: 1.3;
-}
-
+      text-align: center;
+      font-size: 2.5rem;
+      margin-bottom: 5px;
+      line-height: 1.3;
+      color:#FF8341;
+    }
 
     p.subtitle {
       text-align: center;
@@ -99,6 +104,7 @@
       width: 100%;
       transition: 0.3s;
       font-weight: bold;
+      margin-top: 10px;
     }
 
     button:hover {
@@ -131,6 +137,10 @@
       font-weight: bold;
     }
 
+    .chart-container {
+      margin-top: 20px;
+    }
+
     footer {
       margin-top: 30px;
       text-align: center;
@@ -138,32 +148,34 @@
       opacity: 0.9;
     }
 
-    /* Responsividade */
+#campoWhats {
+  margin-top: 15px;
+}
+
+#campoWhats input {
+  border: 2px solid #FF8341;
+}
+
     @media (max-width: 480px) {
-      h1 {
-        font-size: 1.6rem;
-      }
-      .calculator {
-        padding: 20px;
-      }
-      .logo {
-        width: 140px;
-      }
+      h1 { font-size: 1.7rem; }
+      .calculator { padding: 20px; }
+      .logo { width: 130px; }
     }
   </style>
 </head>
 
 <body>
-  <!-- Logo da Mega Mais -->
   <img src="logo.png" alt="Logo Mega Mais Proteção Patrimonial" class="logo" />
+  <h1>PROGRAMA REATIVA</h1>
+  <h2>💥 Oportunidade Imperdível!</h2>
 
-  <h1>PROGRAMA REATIVA <br><br> 💥 Oportunidade Imperdível!</h1>
   <p class="subtitle">
     A <strong>Mega Mais Proteção Patrimonial</strong> está oferecendo descontos progressivos para você continuar protegido com o menor impacto no seu bolso.
   </p>
 
   <div class="calculator">
     <h2>Calculadora de Reajuste Progressivo</h2>
+
     <div class="input-group">
       <label for="valorAntigo">💰 Valor anterior da mensalidade (R$):</label>
       <input type="number" id="valorAntigo" placeholder="Ex: 360" step="0.01" />
@@ -174,9 +186,25 @@
       <input type="number" id="valorNovo" placeholder="Ex: 414" step="0.01" />
     </div>
 
+    <div class="input-group">
+      <label for="meses">📆 Quantidade de meses para diluir (5 a 12):</label>
+      <input type="number" id="meses" placeholder="Ex: 6" min="5" max="12" />
+    </div>
+
     <button onclick="calcular()">Calcular Desconto Progressivo</button>
 
     <div id="resultado" class="result" style="display: none;"></div>
+    <canvas id="grafico" class="chart-container" style="display:none; width:100%;"></canvas>
+
+    <div id="whatsContainer" style="display: none; margin-top: 15px;">
+  <div class="input-group">
+    <label for="numeroWhatsApp">📞 Número para envio (com DDD):</label>
+    <input type="tel" id="numeroWhatsApp" placeholder="Ex: 31987654321" maxlength="13" />
+  </div>
+  <button id="btnWhats" onclick="compartilharWhatsApp()">📱 Enviar pelo WhatsApp</button>
+</div>
+
+    <button id="btnPDF" style="display:none;" onclick="gerarPDF()">📄 Baixar em PDF</button>
   </div>
 
   <footer>
@@ -184,40 +212,132 @@
   </footer>
 
   <script>
-    function calcular() {
-      const valorAntigo = parseFloat(document.getElementById("valorAntigo").value);
-      const valorNovo = parseFloat(document.getElementById("valorNovo").value);
-      const resultado = document.getElementById("resultado");
+  let chart;
 
-      if (isNaN(valorAntigo) || isNaN(valorNovo) || valorAntigo <= 0 || valorNovo <= 0) {
-        resultado.style.display = "block";
-        resultado.innerHTML = "<h3>⚠️ Por favor, preencha os dois campos corretamente.</h3>";
-        return;
-      }
+  function calcular() {
+    const valorAntigo = parseFloat(document.getElementById("valorAntigo").value);
+    const valorNovo = parseFloat(document.getElementById("valorNovo").value);
+    const meses = parseInt(document.getElementById("meses").value);
+    const resultado = document.getElementById("resultado");
+    const grafico = document.getElementById("grafico");
+    const whatsContainer = document.getElementById("whatsContainer");
+    const btnPDF = document.getElementById("btnPDF");
 
-      const primeiroMes = valorAntigo * 0.9; // 10% de desconto
-      const diferenca = valorNovo - primeiroMes;
-      const incremento = diferenca / 4;
-
-      let valores = [];
-      for (let i = 0; i < 5; i++) {
-        valores.push((primeiroMes + incremento * i).toFixed(2));
-      }
-
+    if (isNaN(valorAntigo) || isNaN(valorNovo) || isNaN(meses) ||
+        valorAntigo <= 0 || valorNovo <= 0 || meses < 5 || meses > 12) {
       resultado.style.display = "block";
-      resultado.innerHTML = `
-        <h3>🎉 Confira seu plano com desconto progressivo:</h3>
-        <ul>
-          <li>1º mês: <span class="highlight">R$ ${valores[0]}</span></li>
-          <li>2º mês: <span class="highlight">R$ ${valores[1]}</span></li>
-          <li>3º mês: <span class="highlight">R$ ${valores[2]}</span></li>
-          <li>4º mês: <span class="highlight">R$ ${valores[3]}</span></li>
-          <li>5º mês: <span class="highlight">R$ ${valores[4]}</span> (valor final reajustado)</li>
-        </ul>
-        <p>💡 Aproveite essa oportunidade exclusiva e continue com a segurança, agilidade e credibilidade da <strong>Mega Mais Proteção Patrimonial</strong>.</p>
-        <p>Agora com <strong>indenização em até 30 dias</strong> e <strong>apólice de seguro auto regulamentada pela SUSEP!</strong></p>
-      `;
+      resultado.innerHTML = "<h3>⚠️ Preencha todos os campos corretamente (5 a 12 meses).</h3>";
+      grafico.style.display = "none";
+      whatsContainer.style.display = "none";
+      btnPDF.style.display = "none";
+      return;
     }
-  </script>
+
+    const primeiroMes = valorAntigo * 0.9;
+    const diferenca = valorNovo - primeiroMes;
+    const incremento = diferenca / (meses - 1);
+    const valores = [];
+
+    for (let i = 0; i < meses; i++) {
+      valores.push((primeiroMes + incremento * i).toFixed(2));
+    }
+
+    resultado.style.display = "block";
+    resultado.innerHTML = `
+      <h3>🎉 Confira seu plano com desconto progressivo:</h3>
+      <ul>
+        ${valores.map((v, i) => `<li>${i + 1}º mês: <span class="highlight">R$ ${v}</span></li>`).join("")}
+      </ul>
+      <p>💡 Aproveite essa oportunidade exclusiva e continue com a segurança, agilidade e credibilidade da <strong>Mega Mais Proteção Patrimonial</strong>.</p>
+      <p>Agora com <strong>indenização em até 30 dias</strong> e <strong>apólice de seguro auto regulamentada pela SUSEP!</strong></p>
+    `;
+
+    // Mostra apenas após o cálculo
+    whatsContainer.style.display = "block";
+    btnPDF.style.display = "block";
+    grafico.style.display = "block";
+
+    // Atualiza o gráfico
+    if (chart) chart.destroy();
+
+    chart = new Chart(grafico, {
+      type: "line",
+      data: {
+        labels: valores.map((_, i) => `${i + 1}º mês`),
+        datasets: [{
+          label: "Evolução do valor mensal",
+          data: valores,
+          borderColor: "#FF8341",
+          backgroundColor: "rgba(255,131,65,0.2)",
+          borderWidth: 3,
+          tension: 0.4,
+          fill: true
+        }]
+      },
+      options: {
+        scales: { y: { beginAtZero: false } },
+        plugins: { legend: { display: false } }
+      }
+    });
+
+    // Guarda os valores para uso no WhatsApp
+    window.valoresSimulados = valores;
+    window.meses = meses;
+  }
+
+  function compartilharWhatsApp() {
+    const valores = window.valoresSimulados;
+    const inputNumero = document.getElementById("numeroWhatsApp");
+    const numeroWhatsApp = inputNumero.value.trim();
+
+    if (!valores) {
+      alert("⚠️ Faça o cálculo primeiro antes de compartilhar.");
+      return;
+    }
+
+    if (!numeroWhatsApp || isNaN(numeroWhatsApp)) {
+      alert("📱 Por favor, digite um número de WhatsApp válido (somente números, com DDD).");
+      inputNumero.focus();
+      return;
+    }
+
+    const mensagem = `Confira seu plano com desconto progressivo na Mega Mais Proteção Patrimonial:\n\n${valores.map((v, i) => `${i + 1}º mês: R$ ${v}`).join("\n")}\n\nIndenização em até 30 dias!\n Agora com apólice regulamentada pela SUSEP.\n\nAproveite essa oportunidade!`;
+
+    const link = `https://wa.me/55${numeroWhatsApp}?text=${encodeURIComponent(mensagem)}`;
+    window.open(link, "_blank");
+  }
+
+  async function gerarPDF() {
+    const { jsPDF } = window.jspdf;
+    const resultadoDiv = document.getElementById("resultado");
+
+    const canvas = await html2canvas(resultadoDiv, {
+      scale: 2,
+      scrollY: -window.scrollY,
+      useCORS: true
+    });
+
+    const imgData = canvas.toDataURL("image/png");
+    const pdf = new jsPDF("p", "mm", "a4");
+    const imgWidth = 210;
+    const pageHeight = 297;
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+
+    pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+
+    while (heightLeft > 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, "PNG", 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+
+    pdf.save("Simulacao_MegaMais.pdf");
+  }
+</script>
+
 </body>
 </html>
